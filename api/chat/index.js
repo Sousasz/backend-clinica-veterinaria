@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const puter = require('puter'); // mudar aqui
 
 router.post('/', async (req, res) => {
   const { message } = req.body;
