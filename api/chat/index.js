@@ -12,7 +12,16 @@ router.post("/", async (req, res) => {
   try {
     const { message } = req.body;
 
-    const result = await model.generateContent(message);
+    const systemPrompt = `
+      Você é um assistente chamado Pingo. 
+      - Responda sempre em português.
+      - Tire dúvidas sobre adversidades que ocorrem com os pets dos clientes
+      - Caso a pergunta fuja do tema, diga que você é especializado apenas
+      em responder em perguntas sobre clínica veterinária
+      - Se não souber a resposta, diga que vai pesquisar e busque outras fontes.
+    `;
+
+    const result = await model.generateContent([systemPrompt, message]);
 
     res.json({
       reply: result.response.text(),
