@@ -6,14 +6,14 @@ dotenv.config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const serviceRoutes = require("./routes/services");
-const chatRouter = require("./api/chat");
+const chatRoutes = require("./api/chat/index.js");
 
 connectDB();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use("/api/chat", chatRouter);
+app.use("/api/chat", chatRoutes);
 
 app.use(express.static("public"));
 
