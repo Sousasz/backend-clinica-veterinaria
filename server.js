@@ -20,10 +20,6 @@ app.use(express.static("public"));
 app.use("/api/auth", authRoutes);
 app.use("/api/services", serviceRoutes);
 
-// Opcional: Redirecionar a rota raiz para a página de login
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/public/index.html");
-});
 
 const PORT = process.env.PORT || 5000;
 
