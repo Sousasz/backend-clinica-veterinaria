@@ -13,7 +13,12 @@ connectDB();
 const app = express();
 
 app.use(cors({
-  origin: ["http://localhost:3000", "https://joyce-veterinaria.vercel.app/"],
+  origin: [
+    "https://joyce-veterinaria.vercel.app",
+    "http://localhost:3000",
+  ],
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
 }));
 
 app.use(express.json());
