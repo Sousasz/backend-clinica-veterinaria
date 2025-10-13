@@ -1,4 +1,4 @@
-// FileName: MultipleFiles/server.js
+// server.js
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -18,16 +18,15 @@ app.use(cors({
     "http://localhost:3000",
   ],
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
+  allowedHeaders: ["Content-Type", "x-auth-token", "Authorization"],
+  credentials: true, 
 }));
-
 
 app.use(express.json());
 app.use("/api/chat", chatRoutes);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/services", serviceRoutes);
-
 
 const PORT = process.env.PORT || 5000;
 
