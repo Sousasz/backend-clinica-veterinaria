@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
-const twilio = require('twilio');
+const twilio = require("twilio");
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
 // Função auxiliar para gerar OTP de 6 dígitos
@@ -47,6 +47,11 @@ router.post("/register", async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
+
+    let formattedPhone = req.body.phone.replace(/\D/g, "");
+    if (!formattedPhone.startsWith("55"))
+      formattedPhone = "55" + formattedPhone;
+    user.phone = formattedPhone;
 
     await user.save();
 
@@ -128,7 +133,13 @@ router.post("/forgot-password", async (req, res) => {
     user.otp = otp;
     user.otpExpiry = otpExpiry;
     await user.save();
-    
+
+    let phoneNumber = user.phone.replace(/\D/g, "");
+    if (!phoneNumber.startsWith("55")) {
+      phoneNumber = "55" + phoneNumber; 
+    }
+    phoneNumber = "+" + phoneNumber;
+
     await client.messages.create({
       body: `Seu código OTP para redefinição de senha é: ${otp}. Expira em 10 minutos.`,
       from: process.env.TWILIO_PHONE,
