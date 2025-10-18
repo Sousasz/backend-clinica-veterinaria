@@ -19,7 +19,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "openai": "^5.23.1",
-    "puter": "^1.0.0"
+    "puter": "^1.0.0",
+    "twilio": "^5.10.3"
   },
   "description": ""
 }

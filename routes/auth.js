@@ -1,8 +1,9 @@
-// routes/auth.js
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
-const User = require("../models/User"); // Certifique-se que o caminho está correto
+const User = require("../models/User");
+const twilio = require('twilio');
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
 // Função auxiliar para gerar OTP de 6 dígitos
 function generateOTP() {
@@ -127,8 +128,13 @@ router.post("/forgot-password", async (req, res) => {
     user.otp = otp;
     user.otpExpiry = otpExpiry;
     await user.save();
+    
+    await client.messages.create({
+      body: `Seu código OTP para redefinição de senha é: ${otp}. Expira em 10 minutos.`,
+      from: process.env.TWILIO_PHONE,
+      to: user.phone,
+    });
 
-    // SIMULAÇÃO DE ENVIO DE SMS (integre Twilio aqui)
     console.log(
       `OTP gerado: ${otp} para usuário ${user.username} no telefone ${user.phone}`
     );
