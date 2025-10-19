@@ -113,12 +113,10 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// 1. Iniciar processo de redefinição de senha (envia OTP)
 router.post("/forgot-password", async (req, res) => {
-  const { identifier } = req.body; // identifier pode ser username ou phone
+  const { identifier } = req.body;
 
   try {
-    // Busca usuário por username ou phone
     const user = await User.findOne({
       $or: [{ username: identifier }, { phone: identifier }],
     });
@@ -126,9 +124,8 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(404).json({ msg: "Usuário não encontrado." });
     }
 
-    // Gera OTP e define expiração (10 minutos)
     const otp = generateOTP();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     user.otp = otp;
     user.otpExpiry = otpExpiry;
@@ -136,32 +133,31 @@ router.post("/forgot-password", async (req, res) => {
 
     let phoneNumber = user.phone.replace(/\D/g, "");
     if (!phoneNumber.startsWith("55")) {
-      phoneNumber = "55" + phoneNumber; 
+      phoneNumber = "55" + phoneNumber;
     }
     phoneNumber = "+" + phoneNumber;
+
+    console.log(`Telefone original: ${user.phone}, Formatado: ${phoneNumber}`);
 
     await client.messages.create({
       body: `Seu código OTP para redefinição de senha é: ${otp}. Expira em 10 minutos.`,
       from: process.env.TWILIO_PHONE,
-      to: user.phone,
+      to: phoneNumber,
     });
 
-    console.log(
-      `OTP gerado: ${otp} para usuário ${user.username} no telefone ${user.phone}`
-    );
+    console.log(`OTP enviado: ${otp} para ${phoneNumber}`);
 
     res.json({
       msg: "Código OTP enviado para seu telefone. Verifique em alguns instantes.",
     });
   } catch (err) {
-    console.error(err.message);
+    console.error("Erro ao enviar SMS:", err.message);
     res.status(500).send("Erro no servidor");
   }
 });
 
-// 2. Verificar OTP
 router.post("/verify-otp", async (req, res) => {
-  const { identifier, otp } = req.body; // identifier é username ou phone
+  const { identifier, otp } = req.body;
 
   try {
     const user = await User.findOne({
@@ -181,7 +177,6 @@ router.post("/verify-otp", async (req, res) => {
         .json({ msg: "Código OTP expirado. Solicite um novo." });
     }
 
-    // OTP válido - Não limpa ainda, pois o reset virá em seguida
     res.json({ msg: "Código OTP verificado com sucesso.", userId: user.id }); // Retorna userId para o próximo passo
   } catch (err) {
     console.error(err.message);
@@ -189,7 +184,6 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-// 3. Redefinir senha (após OTP válido)
 router.post("/reset-password", async (req, res) => {
   const { userId, newPassword } = req.body; // userId vem da verificação OTP
 
@@ -205,11 +199,9 @@ router.post("/reset-password", async (req, res) => {
         .json({ msg: "Sessão de OTP inválida ou expirada." });
     }
 
-    // Criptografa a nova senha
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    // Limpa OTP
     user.otp = undefined;
     user.otpExpiry = undefined;
     await user.save();
