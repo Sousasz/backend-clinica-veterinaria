@@ -3,9 +3,10 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const twilio = require("twilio");
+const jwt = require("jsonwebtoken");
 const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
-// Função auxiliar para gerar OTP de 6 dígitos
+
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -25,19 +26,30 @@ router.post("/register", async (req, res) => {
   } = req.body;
 
   try {
-    let user = await User.findOne({ $or: [{ username }, { documentId }] });
+  
+    const cleanUsername = username.replace(/\D/g, "");
+    const cleanDocumentId = documentId.replace(/\D/g, "");
+
+
+    let user = await User.findOne({ $or: [{ username: cleanUsername }, { documentId: cleanDocumentId }] });
     if (user) {
-      return res
-        .status(400)
-        .json({ msg: "Usuário ou Documento já cadastrado." });
+      return res.status(400).json({ msg: "Usuário ou Documento já cadastrado." });
     }
 
+  
+    let formattedPhone = phone.replace(/\D/g, "");
+    if (formattedPhone.length < 10) {
+      return res.status(400).json({ msg: "Telefone inválido. Deve ter pelo menos 10 dígitos." });
+    }
+    if (!formattedPhone.startsWith("55")) formattedPhone = "55" + formattedPhone;
+
+    
     user = new User({
-      username,
+      username: cleanUsername, 
       password,
-      documentId,
+      documentId: cleanDocumentId,
       dateOfBirth,
-      phone,
+      phone: formattedPhone,
       cep,
       addressNumber,
       addressComplement,
@@ -45,15 +57,13 @@ router.post("/register", async (req, res) => {
       addressNeighborhood,
     });
 
+
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
 
-    let formattedPhone = req.body.phone.replace(/\D/g, "");
-    if (!formattedPhone.startsWith("55"))
-      formattedPhone = "55" + formattedPhone;
-    user.phone = formattedPhone;
-
+    console.log("Tentando salvar usuário:", { username: cleanUsername, phone: formattedPhone }); // Log para debug
     await user.save();
+    console.log("Usuário salvo com sucesso."); // Log de sucesso
 
     const payload = {
       user: {
@@ -67,13 +77,16 @@ router.post("/register", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: 3600 },
       (err, token) => {
-        if (err) throw err;
+        if (err) {
+          console.error("Erro ao gerar token JWT:", err.message);
+          return res.status(500).json({ msg: "Erro ao gerar token." });
+        }
         res.status(201).json({ token });
       }
     );
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Erro no servidor");
+    console.error("Erro no registro:", err.message);
+    res.status(500).json({ msg: "Erro no servidor. Verifique os dados e tente novamente." });
   }
 });
 
@@ -81,13 +94,17 @@ router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    let user = await User.findOne({ username });
+
+    const cleanUsername = username.replace(/\D/g, "");
+    let user = await User.findOne({ username: cleanUsername });
     if (!user) {
+      console.log("Usuário não encontrado para username:", cleanUsername); 
       return res.status(400).json({ msg: "Credenciais inválidas" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log("Senha incorreta para usuário:", cleanUsername); 
       return res.status(400).json({ msg: "Credenciais inválidas" });
     }
 
@@ -108,10 +125,12 @@ router.post("/login", async (req, res) => {
       }
     );
   } catch (err) {
-    console.error(err.message);
+    console.error("Erro no login:", err.message);
     res.status(500).send("Erro no servidor");
   }
 });
+
+
 
 router.post("/forgot-password", async (req, res) => {
   const { identifier } = req.body;
@@ -185,7 +204,7 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 router.post("/reset-password", async (req, res) => {
-  const { userId, newPassword } = req.body; // userId vem da verificação OTP
+  const { userId, newPassword } = req.body;
 
   try {
     const user = await User.findById(userId);
@@ -194,15 +213,13 @@ router.post("/reset-password", async (req, res) => {
     }
 
     if (!user.otp || new Date() > user.otpExpiry) {
-      return res
-        .status(400)
-        .json({ msg: "Sessão de OTP inválida ou expirada." });
+      return res.status(400).json({ msg: "Sessão de OTP inválida ou expirada." });
     }
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    user.otp = undefined;
+    user.otp = undefined; // Corrigido: limpar OTP
     user.otpExpiry = undefined;
     await user.save();
 
