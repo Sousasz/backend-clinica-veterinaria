@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   cep: { type: String, required: true },
   addressNumber: { type: String, required: true },
-  addressComplement: { type: String }, // Complemento é opcional
+  addressComplement: { type: String }, 
   addressStreet: { type: String, required: true },
   addressNeighborhood: { type: String, required: true },
   otp: { type: String },

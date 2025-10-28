@@ -61,9 +61,9 @@ router.post("/register", async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
 
-    console.log("Tentando salvar usuário:", { username: cleanUsername, phone: formattedPhone }); // Log para debug
+    console.log("Tentando salvar usuário:", { username: cleanUsername, phone: formattedPhone });
     await user.save();
-    console.log("Usuário salvo com sucesso."); // Log de sucesso
+    console.log("Usuário salvo com sucesso."); 
 
     const payload = {
       user: {
