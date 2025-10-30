@@ -7,6 +7,12 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const serviceRoutes = require("./routes/services");
 const chatRoutes = require("./api/chat/index.js");
+const petRoutes = require('./routes/pets'); 
+const medicineRoutes = require('./routes/medicines'); 
+const vaccineRoutes = require('./routes/vaccines'); 
+const ratingRoutes = require('./routes/rating'); 
+const appointmentRoutes = require('./routes/appointments'); 
+
 
 connectDB();
 
@@ -27,6 +33,11 @@ app.use("/api/chat", chatRoutes);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/services", serviceRoutes);
+app.use('/api/pets', petRoutes);
+app.use('/api/medicines', medicineRoutes); 
+app.use('/api/vaccines', vaccineRoutes); 
+app.use('/api/ratings', ratingRoutes); 
+app.use('/api/appointments', appointmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 
