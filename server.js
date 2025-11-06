@@ -12,7 +12,7 @@ const medicineRoutes = require('./routes/medicines');
 const vaccineRoutes = require('./routes/vaccines'); 
 const ratingRoutes = require('./routes/rating'); 
 const appointmentRoutes = require('./routes/appointments'); 
-
+const userRoutes = require('./routes/user')
 
 connectDB();
 
@@ -30,7 +30,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use("/api/chat", chatRoutes);
-
+app.use('/api/user', userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/services", serviceRoutes);
 app.use('/api/pets', petRoutes);
