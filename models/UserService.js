@@ -1,4 +1,3 @@
-// FileName: MultipleFiles/UserService.js (Antigo MultipleFiles/Service.js)
 const User = require('./User'); // Caminho corrigido para o modelo User
 const bcrypt = require('bcryptjs');
 
@@ -47,14 +46,14 @@ class UserService {
       // Ajuste para verificar se o aniversário já passou no ano atual
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
+        age--;
       }
 
       if (age < 18) {
         return {
           success: false,
           errors: { dateOfBirth: 'Usuário deve ter pelo menos 18 anos' },
-          status: 400 // Bad Request
+          status: 400
         };
       }
 
@@ -123,13 +122,14 @@ class UserService {
 
   /**
    * Valida as credenciais do usuário
-   * @param {string} username - Nome de usuário
+   * @param {string} username - Nome de usuário (na verdade, documentId enviado pelo frontend)
    * @param {string} password - Senha
    * @returns {Promise<Object>} Resultado da validação
    */
   static async validateCredentials(username, password) {
     try {
-      const user = await this.findUserByUsername(username);
+      // Mude aqui: Busque pelo documentId em vez de username, pois o frontend envia o CPF/RG como username
+      const user = await User.findOne({ documentId: username });
 
       if (!user) {
         return { isValid: false, message: 'Usuário não encontrado', status: 401 };
@@ -174,7 +174,7 @@ class UserService {
   /**
    * Atualiza dados do usuário
    * @param {string} userId - ID do usuário
-   * @param {Object} updateData - Dados para atualizar
+   * @param {string} updateData - Dados para atualizar
    * @returns {Promise<Object>} Resultado da operação
    */
   static async updateUser(userId, updateData) {
