@@ -1,4 +1,4 @@
-const User = require('./User'); // Caminho corrigido para o modelo User
+const User = require('./User');
 const bcrypt = require('bcryptjs');
 
 class UserService {
@@ -126,36 +126,37 @@ class UserService {
    * @param {string} password - Senha
    * @returns {Promise<Object>} Resultado da validação
    */
-  static async validateCredentials(username, password) {
-    try {
-      // Mude aqui: Busque pelo documentId em vez de username, pois o frontend envia o CPF/RG como username
-      const user = await User.findOne({ documentId: username });
+  static async validateCredentials(cpf, password) {
+  try {
+    const cleanCpf = cpf.replace(/\D/g, "");
+    const user = await User.findOne({ documentId: cleanCpf });
 
-      if (!user) {
-        return { isValid: false, message: 'Usuário não encontrado', status: 401 };
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordValid) {
-        return { isValid: false, message: 'Senha incorreta', status: 401 };
-      }
-
-      return {
-        isValid: true,
-        user: {
-          id: user._id,
-          username: user.username,
-          role: user.role
-        },
-        status: 200
-      };
-
-    } catch (error) {
-      console.error('Erro no UserService.validateCredentials:', error);
-      return { isValid: false, message: 'Erro ao validar credenciais', status: 500 };
+    if (!user) {
+      return { isValid: false, message: 'Usuário não encontrado', status: 401 };
     }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return { isValid: false, message: 'Senha incorreta', status: 401 };
+    }
+
+    return {
+      isValid: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role
+      },
+      status: 200
+    };
+
+  } catch (error) {
+    console.error('Erro no UserService.validateCredentials:', error);
+    return { isValid: false, message: 'Erro ao validar credenciais', status: 500 };
   }
+}
+
 
   /**
    * Busca usuário por ID

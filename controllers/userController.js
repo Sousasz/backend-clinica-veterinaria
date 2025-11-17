@@ -4,19 +4,17 @@ const User = require('../models/User'); // Importa o modelo User
 // Função para obter os dados pessoais do usuário
 const getUserProfile = async (req, res) => {
   try {
-    // Busca o usuário pelo ID decodificado do token (req.user.id)
-    const user = await User.findById(req.user.id).select('-password -otp -otpExpiry'); // Exclui campos sensíveis
+    const user = await User.findById(req.user.id).select('-password -otp -otpExpiry');
     
     if (!user) {
       return res.status(404).json({ msg: 'Usuário não encontrado' });
     }
     
-    // Retorna os dados pessoais
     res.json({
       id: user._id,
-      username: user.username,
+      username: user.username,     
       role: user.role,
-      documentId: user.documentId,
+      documentId: user.documentId, 
       dateOfBirth: user.dateOfBirth,
       phone: user.phone,
       cep: user.cep,

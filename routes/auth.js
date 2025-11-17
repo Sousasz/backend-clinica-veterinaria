@@ -91,20 +91,26 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { cpf, password } = req.body;
 
   try {
+    if (!cpf) {
+      return res.status(400).json({ msg: "CPF é obrigatório" });
+    }
 
-    const cleanUsername = username.replace(/\D/g, "");
-    let user = await User.findOne({ username: cleanUsername });
+    // Limpa caracteres não numéricos do CPF
+    const cleanCpf = cpf.replace(/\D/g, "");
+
+    // Busca o usuário PELO CPF
+    const user = await User.findOne({ documentId: cleanCpf });
+
     if (!user) {
-      console.log("Usuário não encontrado para username:", cleanUsername); 
       return res.status(400).json({ msg: "Credenciais inválidas" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
-      console.log("Senha incorreta para usuário:", cleanUsername); 
       return res.status(400).json({ msg: "Credenciais inválidas" });
     }
 
@@ -124,12 +130,12 @@ router.post("/login", async (req, res) => {
         res.json({ token });
       }
     );
+
   } catch (err) {
-    console.error("Erro no login:", err.message);
+    console.error("Erro no login:", err);
     res.status(500).send("Erro no servidor");
   }
 });
-
 
 
 router.post("/forgot-password", async (req, res) => {
