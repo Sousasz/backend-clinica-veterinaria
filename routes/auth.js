@@ -98,10 +98,8 @@ router.post("/login", async   (req, res) => {
       return res.status(400).json({ msg: "CPF é obrigatório" });
     }
 
-    // Limpa caracteres não numéricos do CPF
     const cleanCpf = cpf.replace(/\D/g, "");
 
-    // Busca o usuário PELO CPF
     const user = await User.findOne({ documentId: cleanCpf });
 
     if (!user) {
@@ -235,6 +233,39 @@ router.post("/reset-password", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Erro no servidor");
+  }
+});
+
+const authMiddleware = (req, res, next) => {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).json({ message: "Acesso negado. Token não fornecido." });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded.user;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "Token inválido." });
+  }
+};
+
+router.delete("/delete-account", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Usuário não encontrado." });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    res.json({ message: "Conta excluída com sucesso." });
+  } catch (err) {
+    console.error("Erro ao excluir conta:", err);
+    res.status(500).json({ message: "Erro interno do servidor." });
   }
 });
 
