@@ -1,5 +1,5 @@
-const PetService = require('../models/PetService');
-const jwt = require('jsonwebtoken'); // Para obter o ID do usuário do token
+const PetService = require('../services/PetService'); 
+const jwt = require('jsonwebtoken');
 
 exports.createPet = async (req, res) => {
   try {
@@ -9,7 +9,7 @@ exports.createPet = async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const ownerId = decoded.id; // Assumindo que o ID do usuário está no token
+    const ownerId = decoded.id;
 
     const { name, species, breed, age, neutered, sex, weight, temperament } = req.body;
 

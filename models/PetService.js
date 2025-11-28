@@ -1,35 +1,29 @@
-// FileName: MultipleFiles/PetService.js
-const Pet = require('./pet');
+const Pet = require('../models/pet');
 
 class PetService {
   static async createPet(petData) {
     try {
-      const newPet = new Pet(petData);
-      await newPet.save();
-      return { success: true, message: 'Pet cadastrado com sucesso', pet: newPet, status: 201 };
+      const pet = new Pet(petData);
+      await pet.save();
+      return { success: true, status: 201, message: 'Pet cadastrado com sucesso!', pet };
     } catch (error) {
-      console.error('Erro no PetService.createPet:', error);
+      console.error('Erro ao criar pet:', error);
       if (error.name === 'ValidationError') {
-        const validationErrors = {};
-        Object.keys(error.errors).forEach(key => {
-          validationErrors[key] = error.errors[key].message;
-        });
-        return { success: false, errors: validationErrors, status: 400 };
+        return { success: false, status: 400, message: 'Dados inválidos.', errors: error.errors };
       }
-      return { success: false, message: 'Erro interno do servidor ao cadastrar pet', status: 500 };
+      return { success: false, status: 500, message: 'Erro interno ao salvar pet.' };
     }
   }
 
   static async getPetsByOwner(ownerId) {
     try {
-      return await Pet.find({ owner: ownerId });
+      const pets = await Pet.find({ owner: ownerId }).populate('owner', 'name email'); // Popula dados do owner se necessário
+      return pets;
     } catch (error) {
-      console.error('Erro no PetService.getPetsByOwner:', error);
-      throw error;
+      console.error('Erro ao buscar pets:', error);
+      throw new Error('Erro interno ao buscar pets.');
     }
   }
-
-  // Adicione métodos para atualizar e deletar pets se necessário
 }
 
 module.exports = PetService;

@@ -1,4 +1,4 @@
-// FileName: MultipleFiles/Pet.js
+
 const mongoose = require('mongoose');
 
 const PetSchema = new mongoose.Schema({
